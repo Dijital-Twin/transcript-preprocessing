@@ -55,7 +55,24 @@ def preprocess(urls, start=0, end=1):
     with open(f'./data/transcripts/himym-{start}-{end}.json', 'w', encoding='utf-8') as f:
         json.dump(all_scripts, f, ensure_ascii=False, indent=4)
 
-        
+def create_pair(speaker_name, filename):
+    transcripts = None
+
+    with open(f"./data/transcripts/{filename}", 'r', encoding='utf-8') as file:
+        transcripts = json.load(file)
+    
+    matched_dialogues = []
+    for transcript in transcripts:
+        dialogues = transcript['dialogues']
+        for i in range(1, len(dialogues)):
+            if dialogues[i]['speaker'] == speaker_name and dialogues[i-1]['speaker'] != speaker_name:
+                question = dialogues[i-1]['dialogue']
+                answer = dialogues[i]['dialogue']
+                matched_dialogue = {'question' : question, 'answer' : answer}
+                matched_dialogues.append(matched_dialogue)
+    
+    with open(f'./data/transcripts/{filename}-{speaker_name}-pair.json', 'w', encoding='utf-8') as f:
+        json.dump(matched_dialogues, f, ensure_ascii=False, indent=4)    
 
 def main():
     parser = argparse.ArgumentParser(description="How I Met Your Mother Transcript Preprocessing.")
@@ -63,7 +80,9 @@ def main():
     parser.add_argument("--start", type=int, help="Start episode.")
     parser.add_argument("--end", type=int, help="End episode.")
     parser.add_argument("--preprocess", action="store_true", help="Preprocess all transcripts.")
-
+    parser.add_argument("--create_pair", action="store_true", help="Create pair for a speaker transcripts.")
+    parser.add_argument("--speaker", type=str, help="Speaker.")
+    parser.add_argument("--filename", type=str, help="Transcript filename")
     args = parser.parse_args()
 
     if args.download:
@@ -72,6 +91,8 @@ def main():
     if args.preprocess:
         urls = get_episode_list('./data/episodes/himym.txt', 'https://scriptmochi.com')
         preprocess(urls=urls, start=args.start, end=args.end)
+    if args.create_pair:
+        create_pair(speaker_name=args.speaker, filename=args.filename)
 
 if __name__ == "__main__":
     main()
