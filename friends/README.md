@@ -15,3 +15,9 @@ To preprocess all downloaded episodes
 ```bash
 python3 main.py --preprocess --start 1
 ```
+
+Create question and answer pairs for speaker
+
+```bash
+python3 main.py --create_pair --speaker Chandler --filename friends-1-227.json
+```
