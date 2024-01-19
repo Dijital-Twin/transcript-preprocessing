@@ -1,10 +1,15 @@
 import argparse
+import os
+from os.path import exists
 import requests
-from os.path import exists 
-from utils.data import get_episode_list, convert_html_script_to_json, extract_dialogues
+from utils.data import get_episode_list, convert_html_script_to_json
 import json
 
 def download(urls, start=0, end=-1):
+    musthave_download_directory = './data/website_data'
+    if not os.path.exists(musthave_download_directory):
+        os.makedirs(musthave_download_directory)
+    
     exists_count = 0
     downloaded_count = 0
     error_count = 0
@@ -30,6 +35,10 @@ def download(urls, start=0, end=-1):
     print(f"Downloading completed: {downloaded_count} downloaded, {exists_count} already exist, {error_count} error.")
 
 def preprocess(urls, start=0, end=1):
+    musthave_preprocess_directory = './data/transcripts'
+    if not os.path.exists(musthave_preprocess_directory):
+        os.makedirs(musthave_preprocess_directory)
+
     not_exists_count = 0
     preprocessed_count = 0
     all_scripts = []
@@ -47,7 +56,7 @@ def preprocess(urls, start=0, end=1):
             continue
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
-            transcripts = convert_html_script_to_json(content)
+            transcripts = convert_html_script_to_json(content, i)
             all_scripts.append(transcripts)
             preprocessed_count = preprocessed_count + 1
     
@@ -61,15 +70,17 @@ def create_pair(speaker_name, filename):
         transcripts = json.load(file)
     
     matched_dialogues = []
-    for transcript in transcripts:
-        for i in range(1, len(transcript)):
-            if transcript[i]['speaker'] == speaker_name and transcript[i-1]['speaker'] != speaker_name:
-                question = transcript[i-1]['dialogue']
-                answer = transcript[i]['dialogue']
+    for episode in transcripts:
+        dialogues = episode['dialogues']
+        for i in range(1, len(dialogues)):
+
+            if dialogues[i]['speaker'] == speaker_name and dialogues[i-1]['speaker'] != speaker_name:
+                question = dialogues[i-1]['dialogue']
+                answer = dialogues[i]['dialogue']
                 matched_dialogue = {'question' : question, 'answer' : answer}
                 matched_dialogues.append(matched_dialogue)
     
-    with open(f'./data/transcripts/{filename}-{speaker_name}-pair.json', 'w', encoding='utf-8') as f:
+    with open(f'./data/transcripts/{filename.replace(".json", "")}-{speaker_name}-pair.json', 'w', encoding='utf-8') as f:
         json.dump(matched_dialogues, f, ensure_ascii=False, indent=4)    
 
 def main():
