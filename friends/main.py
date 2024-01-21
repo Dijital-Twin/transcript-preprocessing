@@ -63,7 +63,7 @@ def preprocess(urls, start=0, end=1):
     with open(f'./data/transcripts/friends-{start}-{end}.json', 'w', encoding='utf-8') as f:
         json.dump(all_scripts, f, ensure_ascii=False, indent=4)
 
-def create_pair(speaker_name, filename):
+def create_pair(speaker_name, filename, min, max):
     transcripts = None
 
     with open(f"./data/transcripts/{filename}", 'r', encoding='utf-8') as file:
@@ -77,6 +77,8 @@ def create_pair(speaker_name, filename):
             if dialogues[i]['speaker'] == speaker_name and dialogues[i-1]['speaker'] != speaker_name:
                 question = dialogues[i-1]['dialogue']
                 answer = dialogues[i]['dialogue']
+                if(len(question.split()) < min or len(question.split()) > max or len(answer.split()) < min or len(answer.split()) > max):
+                    continue
                 matched_dialogue = {'question' : question, 'answer' : answer}
                 matched_dialogues.append(matched_dialogue)
     
@@ -92,6 +94,9 @@ def main():
     parser.add_argument("--create_pair", action="store_true", help="Create pair for a speaker transcripts.")
     parser.add_argument("--speaker", type=str, help="Speaker.")
     parser.add_argument("--filename", type=str, help="Transcript filename")
+    parser.add_argument("--min", type=int, help="Min word count")
+    parser.add_argument("--max", type=int, help="Max word count")
+
     args = parser.parse_args()
 
     if args.download:
@@ -101,7 +106,7 @@ def main():
         urls = get_episode_list('./data/episodes/friends.txt', 'https://edersoncorbari.github.io/')
         preprocess(urls=urls, start=args.start, end=args.end)
     if args.create_pair:
-        create_pair(speaker_name=args.speaker, filename=args.filename)
+        create_pair(speaker_name=args.speaker, filename=args.filename, min=args.min, max=args.max)
 
 if __name__ == "__main__":
     main()
