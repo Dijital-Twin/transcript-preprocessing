@@ -63,7 +63,7 @@ def preprocess(urls, start=0, end=1):
     with open(f'./data/transcripts/friends-{start}-{end}.json', 'w', encoding='utf-8') as f:
         json.dump(all_scripts, f, ensure_ascii=False, indent=4)
 
-def create_pair(speaker_name, filename, min_word, max_word, sliding_window, step_size):
+def create_pair(speaker_name, filename, min_word, max_word, sliding_window):
     transcripts = None
 
     with open(f"./data/transcripts/{filename}", 'r', encoding='utf-8') as file:
@@ -72,7 +72,7 @@ def create_pair(speaker_name, filename, min_word, max_word, sliding_window, step
     matched_dialogues = []
     for episode in transcripts:
         dialogues = episode['dialogues']
-        for i in range(0, len(dialogues), step_size):
+        for i in range(len(dialogues)):
 
             if dialogues[i]['speaker'] == speaker_name:
                 # Sliding window'a göre önceki konuşmaları al
@@ -104,7 +104,6 @@ def main():
     parser.add_argument("--min", type=int, help="Min word count")
     parser.add_argument("--max", type=int, help="Max word count")
     parser.add_argument("--sliding_window", type=int, help="Sliding window size")
-    parser.add_argument("--step_size", type=int, help="Step size")
 
     args = parser.parse_args()
 
@@ -115,7 +114,7 @@ def main():
         urls = get_episode_list('./data/episodes/friends.txt', 'https://edersoncorbari.github.io/')
         preprocess(urls=urls, start=args.start, end=args.end)
     if args.create_pair:
-        create_pair(speaker_name=args.speaker, filename=args.filename, min_word=args.min, max_word=args.max, sliding_window=args.sliding_window, step_size=args.step_size)
+        create_pair(speaker_name=args.speaker, filename=args.filename, min_word=args.min, max_word=args.max, sliding_window=args.sliding_window)
 
 if __name__ == "__main__":
     main()
